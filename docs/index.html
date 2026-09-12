@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Content Opportunity Scoring for Search Performance Review</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.7;
+    color: #202124;
+    background: #f7f8fa;
+}
+
+header {
+    background: #111827;
+    color: white;
+    padding: 70px 20px;
+}
+
+.hero {
+    max-width: 1000px;
+    margin: auto;
+}
+
+.hero h1 {
+    font-size: 46px;
+    line-height: 1.15;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: 19px;
+    max-width: 850px;
+    color: #d1d5db;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 40px 20px;
+}
+
+section {
+    background: white;
+    padding: 35px;
+    margin-bottom: 28px;
+    border-radius: 12px;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.06);
+}
+
+h2 {
+    font-size: 30px;
+    margin-top: 0;
+    color: #111827;
+}
+
+h3 {
+    color: #374151;
+    margin-top: 28px;
+}
+
+.highlight {
+    background: #f3f4f6;
+    border-left: 5px solid #111827;
+    padding: 18px 22px;
+    margin: 22px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+th, td {
+    padding: 13px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+th {
+    background: #f3f4f6;
+}
+
+.metric {
+    font-size: 34px;
+    font-weight: bold;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin: 25px 0;
+}
+
+.card {
+    padding: 22px;
+    background: #f3f4f6;
+    border-radius: 10px;
+}
+
+.card strong {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+code {
+    background: #f3f4f6;
+    padding: 3px 6px;
+    border-radius: 4px;
+}
+
+.chart {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.bar-container {
+    max-width: 700px;
+    margin: auto;
+}
+
+.bar-row {
+    display: flex;
+    align-items: center;
+    margin: 18px 0;
+}
+
+.bar-label {
+    width: 190px;
+    text-align: right;
+    padding-right: 15px;
+}
+
+.bar {
+    height: 35px;
+    background: #374151;
+    border-radius: 5px;
+}
+
+.bar-value {
+    padding-left: 12px;
+    font-weight: bold;
+}
+
+footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+}
+
+@media(max-width: 700px) {
+    .hero h1 {
+        font-size: 34px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    section {
+        padding: 24px;
+    }
+
+    .bar-label {
+        width: 130px;
+        font-size: 13px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="hero">
+
+<h1>Content Opportunity Scoring for Search Performance Review</h1>
+
+<p>
+Using observable webpage search and engagement signals to prioritize
+content-review opportunities through a leakage-audited machine learning workflow.
+</p>
+
+<p>
+<strong>FlyRank ML Internship — Machine Learning Track</strong>
+</p>
+
+</div>
+</header>
+
+<div class="container">
+
+<section>
+
+<h2>Abstract</h2>
+
+<p>
+Content teams often need to decide which webpages should be reviewed first,
+but large-scale search-performance data makes manual prioritization difficult.
+This project investigates whether observable webpage performance signals can
+support a ranked content-review workflow using production-style search and
+analytics data from the FlyRank ML Internship dataset.
+</p>
+
+<p>
+We aggregate webpage-level performance signals, apply leakage checks, compare
+a transparent rule-based baseline with a learned Logistic Regression model,
+and evaluate the model using grouped validation that prevents client overlap
+between training and validation data.
+</p>
+
+<p>
+The learned model achieved an <strong>F1 score of 0.795</strong>, compared with
+<strong>0.535</strong> for the Week-4 transparent baseline on the same modeling task.
+</p>
+
+<p>
+The resulting system is intended as <strong>decision support for human
+SEO/content review</strong>, not as a causal model of whether refreshing a page
+will improve search performance.
+</p>
+
+</section>
+
+
+<section>
+
+<h2>1. Question</h2>
+
+<h3>Research Question</h3>
+
+<div class="highlight">
+<strong>
+Can observable webpage search and engagement signals be used to prioritize
+webpages for content review?
+</strong>
+</div>
+
+<p>
+The goal is to help an SEO/content team decide which webpages should be
+reviewed first when working with a large number of webpages.
+</p>
+
+<div class="grid">
+
+<div class="card">
+<strong>REVIEW</strong>
+Highest priority for human review.
+</div>
+
+<div class="card">
+<strong>WATCH</strong>
+Monitor for a potential opportunity.
+</div>
+
+<div class="card">
+<strong>NO_ACTION</strong>
+No immediate priority from the current rule.
+</div>
+
+</div>
+
+<p>
+The unit of analysis is an individual webpage identified using pseudonymized
+client and content identifiers.
+</p>
+
+<p>
+The system is designed as decision support, not as an autonomous
+content-editing system.
+</p>
+
+</section>
+
+
+<section>
+
+<h2>2. Data</h2>
+
+<p>
+The analysis uses the <strong>FlyRank ML Internship dataset</strong>.
+The primary development table is
+<code>fact_content_daily_performance</code>.
+</p>
+
+<h3>Development Window</h3>
+
+<ul>
+<li>Development period: <strong>March 2026</strong></li>
+<li>Original grain: client × webpage × report date</li>
+<li>Modeling grain: client × webpage</li>
+<li>GSC metrics restricted to records where GSC data was available</li>
+</ul>
+
+<h3>Main Observable Signals</h3>
+
+<ul>
+<li>GSC impressions</li>
+<li>GSC clicks</li>
+<li>GSC average position</li>
+<li>GA4 pageviews</li>
+<li>GA4 sessions</li>
+<li>GA4 users</li>
+<li>CTR for descriptive analysis and baseline scoring</li>
+</ul>
+
+<h3>Public-Safety Exclusions</h3>
+
+<ul>
+<li>Client names</li>
+<li>Domains</li>
+<li>Webpage URLs</li>
+<li>Private search queries</li>
+<li>Identifying webpage text</li>
+<li>Credentials and authentication information</li>
+<li>Future outcome fields when they could leak the target</li>
+<li>Product decision/health flags</li>
+</ul>
+
+<p>
+The paper uses pseudonymized identifiers and aggregate performance
+measurements rather than exposing private client information.
+</p>
+
+</section>
+
+
+<section>
+
+<h2>3. Methodology</h2>
+
+<h3>Features</h3>
+
+<p>The final leakage-audited model feature set consists of:</p>
+
+<ul>
+<li><code>impressions</code></li>
+<li><code>clicks</code></li>
+<li><code>avg_position</code></li>
+<li><code>pageviews</code></li>
+<li><code>sessions</code></li>
+<li><code>users</code></li>
+</ul>
+
+<h3>Target</h3>
+
+<p>
+The modeling task predicts whether a webpage experiences a future decline
+relative to its current observed performance.
+</p>
+
+<div class="highlight">
+<strong>
+Current / historical features → Decision point → Future outcome → Target
+</strong>
+</div>
+
+<p>
+Separating the feature window from the future outcome is important for
+avoiding target leakage.
+</p>
+
+<h3>Model</h3>
+
+<p>
+The learned model is <strong>Logistic Regression</strong>.
+It was selected because it is simple, computationally efficient, suitable
+for binary classification, and relatively easy to interpret.
+</p>
+
+<h3>Transparent Baseline</h3>
+
+<table>
+<tr>
+<th>Condition</th>
+<th>Score</th>
+<th>Reason</th>
+<th>Action</th>
+</tr>
+
+<tr>
+<td>High impressions + low CTR</td>
+<td>2</td>
+<td><code>LOW_CTR_HIGH_VOLUME</code></td>
+<td><strong>REVIEW</strong></td>
+</tr>
+
+<tr>
+<td>High impressions</td>
+<td>1</td>
+<td><code>HIGH_SEARCH_VOLUME</code></td>
+<td><strong>WATCH</strong></td>
+</tr>
+
+<tr>
+<td>Otherwise</td>
+<td>0</td>
+<td><code>LOW_PRIORITY</code></td>
+<td><strong>NO_ACTION</strong></td>
+</tr>
+</table>
+
+<h3>Validation</h3>
+
+<p>
+Grouped validation based on <code>client_hash_id</code> prevents the same
+client from appearing in both the training and validation groups.
+</p>
+
+<h3>Evaluation</h3>
+
+<p>
+The primary metric is <strong>F1 score</strong>, with accuracy, precision,
+recall, and ROC-AUC also reported.
+</p>
+
+<h3>Leakage Audit</h3>
+
+<div class="highlight">
+<strong>
+PASS — no known target/flag/future fields are in the feature list.
+</strong>
+</div>
+
+</section>
+
+
+<section>
+
+<h2>4. Results — Model vs Baseline</h2>
+
+<p>
+The learned Logistic Regression model was compared with the transparent
+Week-4 baseline on the same modeling task.
+</p>
+
+<table>
+
+<tr>
+<th>Model</th>
+<th>Accuracy</th>
+<th>Precision</th>
+<th>Recall</th>
+<th>F1</th>
+<th>ROC-AUC</th>
+</tr>
+
+<tr>
+<td><strong>Logistic Regression</strong></td>
+<td>0.888</td>
+<td>0.710</td>
+<td>0.903</td>
+<td><strong>0.795</strong></td>
+<td>0.948</td>
+</tr>
+
+<tr>
+<td>Week-4 Baseline</td>
+<td>0.666</td>
+<td>0.403</td>
+<td>0.796</td>
+<td><strong>0.535</strong></td>
+<td>0.948</td>
+</tr>
+
+</table>
+
+<h3>F1 Comparison</h3>
+
+<div class="chart">
+
+<div class="bar-container">
+
+<div class="bar-row">
+<div class="bar-label">Logistic Regression</div>
+<div class="bar" style="width:79.5%;"></div>
+<div class="bar-value">0.795</div>
+</div>
+
+<div class="bar-row">
+<div class="bar-label">Week-4 Baseline</div>
+<div class="bar" style="width:53.5%;"></div>
+<div class="bar-value">0.535</div>
+</div>
+
+</div>
+
+</div>
+
+<div class="grid">
+
+<div class="card">
+<strong>0.795</strong>
+Logistic Regression F1
+</div>
+
+<div class="card">
+<strong>0.535</strong>
+Baseline F1
+</div>
+
+<div class="card">
+<strong>+0.260</strong>
+Absolute F1 improvement
+</div>
+
+</div>
+
+<p>
+The learned model achieved higher precision and recall while also producing
+a substantially higher F1 score.
+</p>
+
+<p>
+This indicates that combining multiple observable signals can provide
+stronger predictive separation than the simple baseline rule in this
+development evaluation.
+</p>
+
+<p>
+The result should be interpreted only within the evaluated validation setting.
+It does not establish that the model will perform equally well on every
+future client or time period.
+</p>
+
+</section>
+
+
+<section>
+
+<h2>5. Limitations</h2>
+
+<h3>Observational Data</h3>
+
+<p>
+The dataset contains observed search and engagement behavior rather than
+randomized experimental data. Therefore, the analysis does not establish
+causality.
+</p>
+
+<h3>Limited Time Window</h3>
+
+<p>
+The development analysis uses a defined period. Search behavior can change
+across time, industries, seasons, and external events.
+</p>
+
+<h3>Client Differences</h3>
+
+<p>
+Clients can differ in site structure, audience, content strategy, industry,
+and search behavior. Grouped validation reduces client overlap but does not
+guarantee performance on every unseen client.
+</p>
+
+<h3>Feature Limitations</h3>
+
+<p>
+The model does not directly understand search intent, content quality,
+competitor content, SERP features, title quality, internal linking,
+backlinks, or business priorities.
+</p>
+
+<h3>Target Limitation</h3>
+
+<p>
+The decline target is an operational outcome definition rather than a direct
+measurement of content quality.
+</p>
+
+<div class="highlight">
+
+<strong>Honest claim:</strong>
+
+The workflow can rank observed webpage-performance patterns for
+content-review prioritization, and the learned model outperformed the
+transparent baseline on F1 in the evaluated development setting.
+
+</div>
+
+<p>
+It does not prove which webpages should definitely be refreshed, predict
+Google's ranking algorithm, or guarantee improved performance after a
+content change.
+</p>
+
+</section>
+
+
+<section>
+
+<h2>6. Ranked Recommendations</h2>
+
+<h3>Priority 1 — REVIEW</h3>
+
+<p>
+<strong>Reason code:</strong>
+<code>LOW_CTR_HIGH_VOLUME</code>
+</p>
+
+<p>
+Pages with substantial search exposure and relatively low CTR receive the
+highest priority for human investigation.
+</p>
+
+<p>
+Reviewers should examine search intent, ranking position, SERP context,
+title/snippet relevance, content freshness, query mix, recent changes,
+business relevance, and expected effort versus potential value.
+</p>
+
+<h3>Priority 2 — WATCH</h3>
+
+<p>
+<strong>Reason code:</strong>
+<code>HIGH_SEARCH_VOLUME</code>
+</p>
+
+<p>
+Pages with meaningful search exposure but without the stronger low-CTR
+condition can be monitored for future changes.
+</p>
+
+<h3>Priority 3 — NO_ACTION</h3>
+
+<p>
+<strong>Reason code:</strong>
+<code>LOW_PRIORITY</code>
+</p>
+
+<p>
+Pages that do not meet the current priority conditions receive no immediate
+recommendation from this baseline.
+</p>
+
+<div class="highlight">
+
+<strong>Human-in-the-loop principle:</strong>
+
+The system recommends <strong>where to look</strong>, not
+<strong>what to publish</strong>.
+
+</div>
+
+</section>
+
+
+<section>
+
+<h2>7. Action Playbook Output</h2>
+
+<p>
+The final Week-7 action-playbook export contains
+<strong>176,738 webpage-level rows</strong>.
+</p>
+
+<table>
+
+<tr>
+<th>Action</th>
+<th>Rows</th>
+</tr>
+
+<tr>
+<td>REVIEW</td>
+<td>100,660</td>
+</tr>
+
+<tr>
+<td>NO_ACTION</td>
+<td>75,297</td>
+</tr>
+
+<tr>
+<td>WATCH</td>
+<td>781</td>
+</tr>
+
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>176,738</strong></td>
+</tr>
+
+</table>
+
+<p>
+The queue demonstrates how the modeling work can be translated into an
+operational human-review workflow.
+</p>
+
+</section>
+
+
+<section>
+
+<h2>Failure Cases</h2>
+
+<h3>High-volume page with low CTR</h3>
+
+<p>
+Low CTR can result from SERP layout, search intent, query mix, or user
+behavior. It does not by itself prove that content needs refreshing.
+</p>
+
+<h3>Low-ranking page</h3>
+
+<p>
+A page with low CTR and poor average position may be prioritized, but its
+low CTR may primarily reflect its ranking position rather than content quality.
+</p>
+
+<h3>Future decline not captured</h3>
+
+<p>
+Competitor activity, seasonality, changes in search demand, external events,
+or other ranking-environment changes may cause future decline without being
+represented in the current feature set.
+</p>
+
+<h3>False positives and false negatives</h3>
+
+<p>
+The model may prioritize pages that remain stable or miss pages that later
+decline. These errors reinforce the need for continued validation and
+human review.
+</p>
+
+</section>
+
+
+<section>
+
+<h2>Reproducibility</h2>
+
+<p>
+The project is organized as a sequence of notebooks corresponding to the
+internship workflow.
+</p>
+
+<table>
+
+<tr>
+<th>Week</th>
+<th>Notebook</th>
+<th>Purpose</th>
+</tr>
+
+<tr>
+<td>3</td>
+<td><code>w03_feature_leakage_check.ipynb</code></td>
+<td>Leakage and feature boundaries</td>
+</tr>
+
+<tr>
+<td>3</td>
+<td><code>w03_data_contract.ipynb</code></td>
+<td>Problem and data contract</td>
+</tr>
+
+<tr>
+<td>4</td>
+<td><code>w04_signal_audit.ipynb</code></td>
+<td>Signal distributions</td>
+</tr>
+
+<tr>
+<td>4</td>
+<td><code>w04_baseline_score.ipynb</code></td>
+<td>Transparent baseline</td>
+</tr>
+
+<tr>
+<td>5</td>
+<td><code>w05_model.ipynb</code></td>
+<td>Learned model</td>
+</tr>
+
+<tr>
+<td>6</td>
+<td><code>w06_validation_audit.ipynb</code></td>
+<td>Validation and leakage audit</td>
+</tr>
+
+<tr>
+<td>7</td>
+<td><code>w07_action_playbook.ipynb</code></td>
+<td>Ranked action queue</td>
+</tr>
+
+<tr>
+<td>8</td>
+<td><code>capstone.ipynb</code></td>
+<td>Final research paper workflow</td>
+</tr>
+
+</table>
+
+<p>
+The public repository contains the analysis workflow while avoiding private
+client names, domains, URLs, search queries, credentials, and other
+identifying information.
+</p>
+
+</section>
+
+
+<section>
+
+<h2>Conclusion</h2>
+
+<p>
+This project investigated whether observable webpage performance signals
+could support content-review prioritization.
+</p>
+
+<p>
+The analysis established a workflow from data-contract definition and
+leakage auditing through signal analysis, transparent baseline scoring,
+learned modeling, validation, and action-playbook generation.
+</p>
+
+<p>
+The Logistic Regression model achieved an F1 score of
+<strong>0.795</strong>, compared with <strong>0.535</strong> for the
+transparent Week-4 baseline in the development evaluation.
+</p>
+
+<p>
+The practical contribution is therefore a
+<strong>human-in-the-loop prioritization workflow</strong>: measurable
+signals help decide where SEO/content teams should investigate first,
+while expert review determines whether any action is appropriate.
+</p>
+
+<p>
+Future work should test the workflow on additional time periods, unseen
+clients, richer content and SERP features, and prospective outcomes after
+human-reviewed content changes.
+</p>
+
+</section>
+
+
+<section>
+
+<h2>Acknowledgments & Data Credit</h2>
+
+<p>
+This project was completed as part of the FlyRank ML Internship.
+</p>
+
+<p>
+<strong>Built on the
+<a href="https://flyrank.ai" target="_blank">
+FlyRank ML Internship dataset
+</a></strong>
+</p>
+
+<p>
+The analysis uses the internship dataset for research and educational
+purposes. Public outputs intentionally use pseudonymized identifiers,
+aggregate measurements, and non-identifying examples to protect client
+and business information.
+</p>
+
+</section>
+
+
+<section>
+
+<h2>Public-Safety Statement</h2>
+
+<ul>
+<li>No client names</li>
+<li>No domains</li>
+<li>No private search queries</li>
+<li>No credentials or tokens</li>
+<li>No identifying webpage content</li>
+<li>No Google algorithm claims</li>
+<li>No causal refresh claims</li>
+<li>Human review required before action</li>
+</ul>
+
+</section>
+
+</div>
+
+<footer>
+
+<p>
+FlyRank ML Internship · Machine Learning · Content Opportunity Scoring
+</p>
+
+<p>
+Decision-support research based on observable webpage-performance signals.
+</p>
+
+</footer>
+
+</body>
+</html>
