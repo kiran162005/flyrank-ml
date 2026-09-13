@@ -206,11 +206,11 @@ content-review opportunities through a leakage-audited machine learning workflow
 <h2>Abstract</h2>
 
 <p>
-Content teams often need to decide which webpages should be reviewed first,
-but large-scale search-performance data makes manual prioritization difficult.
-This project investigates whether observable webpage performance signals can
-support a ranked content-review workflow using production-style search and
-analytics data from the FlyRank ML Internship dataset.
+Content teams working across many webpages need practical ways to decide which pages should receive attention first. 
+This project investigates whether observable webpage search and engagement signals can support a ranked content-review workflow for the FlyRank content opportunity problem. 
+Using the FlyRank ML Internship dataset, the workflow aggregates webpage-level performance signals, applies leakage checks, compares a transparent high-volume/low-CTR baseline with a Logistic Regression model, and evaluates the learned model using grouped client-level validation. 
+The Logistic Regression model achieved an F1 score of 0.795, compared with 0.535 for the transparent baseline in the evaluated development setting. 
+The resulting system is designed as human-in-the-loop decision support: it helps content teams identify where to investigate first, but does not claim that a selected page definitely needs refreshing or that refreshing it will cause improved SEO performance.
 </p>
 
 <p>
